@@ -1,0 +1,56 @@
+# Import necessary libraries
+import langdetect
+from deep_translator import GoogleTranslator
+
+# Define the translation function
+def translate_to_english(question: str) -> dict:
+    try:
+        # Detect the language of the input question
+        detected_lang = langdetect.detect(question)
+        
+        # If the detected language is not English, translate to English
+        if detected_lang != 'en':
+            translator = GoogleTranslator(source=detected_lang, target='en')
+            translated_question = translator.translate(question)
+            return {
+                'original_question': question,
+                'original_language': detected_lang,
+                'english_question': translated_question,
+                'translated': True
+            }
+        else:
+            # If the question is already in English, return it as is
+            return {
+                'original_question': question,
+                'original_language': 'en',
+                'english_question': question,
+                'translated': False
+            }
+    except Exception as e:
+        print(f"Translation error for '{question}': {str(e)}")
+        return {
+            'error': f"Error processing '{question}': {str(e)}"
+        }
+
+# Function to generate the prompt with translated question
+def create_prompt_with_translation(question: str) -> str:
+    # Step 1: Translate the question if necessary
+    translation_result = translate_to_english(question)
+    translated_question = translation_result.get('english_question', question)
+    
+    # Step 2: Define the system prompt using the translated question
+    system_prompt = f"""
+    You are an advanced AI assistant powered by LLaMA 3.1.
+    Here is the user's question translated to English: "{translated_question}".
+    Please proceed with answering this question.
+    """
+    
+    # Return the formatted system prompt
+    return system_prompt
+
+# Example usage
+question = "¿Cómo estás?"
+formatted_prompt = create_prompt_with_translation(question)
+
+# Output the formatted prompt
+print(f"Formatted Prompt: {formatted_prompt}")
