@@ -1,0 +1,59 @@
+# Define the translation function
+import langdetect
+from deep_translator import GoogleTranslator
+
+def translate_to_english(question: str) -> dict:
+    try:
+        # Detect the language of the input question
+        detected_lang = langdetect.detect(question)
+        
+        # If the detected language is not English, translate to English
+        if detected_lang != 'en':
+            translator = GoogleTranslator(source=detected_lang, target='en')
+            translated_question = translator.translate(question)
+            return {
+                'original_question': question,
+                'original_language': detected_lang,
+                'english_question': translated_question,
+                'translated': True
+            }
+        else:
+            # If the question is already in English, return it as is
+            return {
+                'original_question': question,
+                'original_language': 'en',
+                'english_question': question,
+                'translated': False
+            }
+    except Exception as e:
+        print(f"Translation error for '{question}': {str(e)}")
+        return {
+            'error': f"Error processing '{question}': {str(e)}"
+        }
+
+# Example system prompt handling logic
+def handle_input(question: str):
+    # Step 1: Translate the question if needed
+    translation_result = translate_to_english(question)
+    
+    # Step 2: Handle any translation errors
+    if 'error' in translation_result:
+        return translation_result['error']
+    
+    # Step 3: If translation occurred, pass the translated question back to the system prompt
+    if translation_result['translated']:
+        english_question = translation_result['english_question']
+        print(f"Translated '{translation_result['original_question']}' from {translation_result['original_language']} to English: {english_question}")
+        # Process the translated question further, such as querying a model or providing a response
+        # system_prompt = "You are an advanced AI assistant..."
+        # Pass `english_question` to the AI system for further processing
+        return english_question
+    else:
+        # If the question was already in English, proceed as usual
+        print(f"Received English question: {translation_result['original_question']}")
+        return translation_result['english_question']
+
+# Example usage
+input_question = "¿Cómo estás?"
+processed_question = handle_input(input_question)
+print(processed_question)
